@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Postin.Aplikacja;
+using Postin.Pomocnicze;
 
 namespace Postin
 {
@@ -8,7 +9,8 @@ namespace Postin
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Administrator n = new Administrator("Admin2", "1234", "A", "B", "C");
+            Symulacja.zalogujUzytkownika(n);
         }
     }
 }
