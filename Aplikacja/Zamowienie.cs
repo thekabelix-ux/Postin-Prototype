@@ -46,15 +46,4 @@ namespace Postin.Aplikacja
         public List<Przesylka> przesylki { get; private set; }
     }
 
-    public class Opinia
-    {
-        public Opinia()
-        {
-            data = DateTime.Now;
-        }
-
-        public int id_opinii { get; private set; }
-        public DateTime data { get; private set; }
-        public string opis {  get; private set; }
-    }
 }

@@ -47,21 +47,5 @@ namespace Postin.Pomocnicze
 
 
         }
-
-        public static void zalogujUzytkownika(Uzytkownik user)
-        {
-
-            bool zalogowano = false;
-            try { zalogowano = user.zaloguj("Admin", "1234"); }
-            catch (ArgumentException e)
-            {
-                Console.WriteLine(e.Message);
-            }
-            finally
-            {
-                if (zalogowano) Console.WriteLine("Success użytkownik poprawnie zalogowany");
-            }
-
-        }
     }
 }

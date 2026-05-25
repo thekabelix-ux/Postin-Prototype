@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,7 +16,7 @@ namespace Postin.Aplikacja
         }
     }
 
-    abstract public class Uzytkownik
+    abstract public class Uzytkownik : Postin.Zewnetrzne.IDataRekord
     {
         // Dane bazowe
         public int ID { protected set; get; }
@@ -30,14 +31,18 @@ namespace Postin.Aplikacja
         protected bool sesja_aktywna;
         //
 
+        
+
+
         // Metody
-        public bool zaloguj(string login, string haslo)
+        static public bool zaloguj(string login, string haslo)
         {
-            if (sesja_aktywna) throw new Exception("Jesteś już zalogowany");
-            if (this.login != login) throw new ArgumentException("Błędny login");
-            else if (this.haslo != haslo) throw new ArgumentException("Błędne hasło");
-            sesja_aktywna = true;
-            return sesja_aktywna;
+            Uzytkownik user_data = (Uzytkownik)(Postin.Zewnetrzne.BazyDanych.FindInBase("Uzytkownicy", (a) => { return a is Uzytkownik u && u.login == login; }));
+            if (user_data == null) throw new ArgumentException("Nie ma takiego użytkownika");
+            if (user_data.sesja_aktywna) throw new Exception("Jesteś już zalogowany");
+            else if (user_data.haslo != haslo) throw new ArgumentException("Błędne hasło");
+            user_data.sesja_aktywna = true;
+            return user_data.sesja_aktywna;
         }
 
 
@@ -70,6 +75,24 @@ namespace Postin.Aplikacja
         {
             this.nr_rejestracyjny = nr_rejestracyjny;
         }
+
+
+        void pobierz_plan()
+        {
+
+        }
+
+        void potwierdz_zaladunek()
+        {
+
+        }
+
+        void potwierdz_doreczenie()
+        {
+
+        }
+
+
     }
 
 
@@ -93,6 +116,26 @@ namespace Postin.Aplikacja
             this.nr_telefonu = nr_tel;
             this.email = email;
         }
+
+
+        void sledz_zamowienie()
+        {
+
+        }
+
+        void zglos_zwrot()
+        {
+
+        }
+
+        void zglos_uwagi()
+        {
+        }
+
+        void pobierz_potwierdzenie()
+        {
+
+        }
     }
 
 
@@ -103,6 +146,11 @@ namespace Postin.Aplikacja
         // Konstruktor
         public Sprzedawca(string login, string haslo, string imie, string nazwisko, string _adres_zamieszkania, string nip) : base(login, haslo, imie, nazwisko, _adres_zamieszkania) {
             this.nip = nip;
+        }
+
+        public void przekaz_zamowienie(Postin.Zewnetrzne.IDataRekord dane_paczki)
+        {
+          var base_ = Postin.Zewnetrzne.BazyDanych.GetDataBase("Przesylki");
         }
 
     }
