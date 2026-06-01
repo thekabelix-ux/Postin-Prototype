@@ -35,7 +35,7 @@ namespace Postin.Aplikacja
 
 
         // Metody
-        static public bool zaloguj(string login, string haslo)
+        static public bool Zaloguj(string login, string haslo)
         {
             Uzytkownik user_data = (Uzytkownik)(Postin.Zewnetrzne.BazyDanych.FindInBase("Uzytkownicy", (a) => { return a is Uzytkownik u && u.login == login; }));
             if (user_data == null) throw new ArgumentException("Nie ma takiego użytkownika");
@@ -77,17 +77,17 @@ namespace Postin.Aplikacja
         }
 
 
-        void pobierz_plan()
+        void PobierzPlan()
         {
 
         }
 
-        void potwierdz_zaladunek()
+        void PotwierdzZaladunek()
         {
 
         }
 
-        void potwierdz_doreczenie()
+        void PotwierdzDoreczenie()
         {
 
         }
@@ -103,6 +103,28 @@ namespace Postin.Aplikacja
 
         // Konstruktor
         public Administrator(string login, string haslo, string imie, string nazwisko, string _adres_zamieszkania) : base(login, haslo, imie, nazwisko, _adres_zamieszkania) {}
+
+        public List<Zamowienie> PobierzZamowienia()
+        {
+            var data = Postin.Zewnetrzne.BazyDanych.GetDataBase("Zamowienia");
+
+            var zamowienia = new List<Zamowienie>();
+            foreach(var rekord in data)
+            {
+                zamowienia.Add((Zamowienie)rekord);
+            }
+
+            return zamowienia;
+        }
+
+        public List<Zamowienie> GrupujZamowienia()
+        {
+            var zamowienia = PobierzZamowienia();
+
+            // logika grupowania do zaimplementowania
+
+            return zamowienia;
+        }
     }
 
 
@@ -118,21 +140,31 @@ namespace Postin.Aplikacja
         }
 
 
-        void sledz_zamowienie()
+        void SledzZamowienie(int nrZamowienia)
         {
+            Zamowienie zamowienie = (Zamowienie)Postin.Zewnetrzne.BazyDanych.FindInBase("Zamowienia", (a) => { return a is Zamowienie z && z.numer == nrZamowienia; });
 
+            // logika śledzenia do zaimplementowania
         }
 
-        void zglos_zwrot()
+        void ZglosZwrot(string przyczyna, params string[] idPrzesylek)
         {
+            var zwrot = new Zwrot(przyczyna);
 
+            foreach(var id in idPrzesylek)
+            {
+                var przesylka = (Przesylka)Postin.Zewnetrzne.BazyDanych.FindInBase("Przesylki", (a) => { return a is Przesylka p && p.idPrzesylki == id; });
+                zwrot.przesylki.Add(przesylka);
+            }
+
+            Postin.Zewnetrzne.BazyDanych.AddToBase("Zwroty", zwrot);
         }
 
-        void zglos_uwagi()
+        void ZglosUwagi()
         {
         }
 
-        void pobierz_potwierdzenie()
+        void PobierzPotwierdzenie()
         {
 
         }
@@ -148,7 +180,7 @@ namespace Postin.Aplikacja
             this.nip = nip;
         }
 
-        public void przekaz_zamowienie(Postin.Zewnetrzne.IDataRekord dane_paczki)
+        public void PrzekazZamowienie(Postin.Zewnetrzne.IDataRekord dane_paczki)
         {
           var base_ = Postin.Zewnetrzne.BazyDanych.GetDataBase("Przesylki");
         }

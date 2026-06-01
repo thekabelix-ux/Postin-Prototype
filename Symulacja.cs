@@ -30,7 +30,7 @@ namespace Postin.Pomocnicze
             try { action_status = expected_action(); }
             catch (ExceptionType e)
             {
-                if (custom_error_message!="")
+                if (custom_error_message != "")
                 {
                     Console.WriteLine(custom_error_message);
                 }

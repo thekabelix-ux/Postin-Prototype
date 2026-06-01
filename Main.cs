@@ -24,13 +24,15 @@ namespace Postin
 
             string login = "Admin", haslo = "123";
 
-            bool akcja_logowania() { return Uzytkownik.zaloguj(login, haslo); };
-
+            bool akcja_logowania() { return Uzytkownik.Zaloguj(login, haslo); };
+            Console.WriteLine("Testy logowania - Administrator:");
             Symulacja.hookAction<ArgumentException>(akcja_logowania, "Logowanie zakończone suckcesem");
-            login = "Admin2"; // Poprawa loginu na instniejący
+            login = "Admin2"; // Poprawa loginu na istniejący
             Symulacja.hookAction<ArgumentException>(akcja_logowania, "Logowanie zakończone suckcesem");
             haslo = "1234"; // Poprawa hasła
             Symulacja.hookAction<ArgumentException>(akcja_logowania, "Logowanie zakończone suckcesem");
+            // próba logowania, gdy użytkownik jest już zalogowany
+            Symulacja.hookAction<Exception>(akcja_logowania, "Logowanie zakończone suckcesem");
 
             // Klienta dodam po zmianach w logowaniu
 

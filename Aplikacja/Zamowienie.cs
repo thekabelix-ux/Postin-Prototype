@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Postin.Aplikacja
 {
-    public class Zamowienie
+    public class Zamowienie : Postin.Zewnetrzne.IDataRekord
     {
         public Zamowienie()
         {
@@ -22,25 +22,29 @@ namespace Postin.Aplikacja
         public List<Przesylka> przesylki { get; private set; }
     }
 
-    public class Przesylka
+    public class Przesylka : Postin.Zewnetrzne.IDataRekord
     {
-        public string id_przesylki { get; private set; }
+        public string idPrzesylki { get; private set; }
         public float waga { get; private set; }
         public float szerkosc { get; private set; }
         public float wysokosc { get; private set; }
         public float dlugosc { get; private set; }
         public string status { get; private set; }
-        public bool czy_delikatna { get; private set; }
+        public bool czyDelikatna { get; private set; }
     }
 
-    public class Zwrot
+    public class Zwrot : Postin.Zewnetrzne.IDataRekord
     {
-        public Zwrot()
+        static private int index = 1;
+
+        public Zwrot(string przyczyna)
         {
             data = DateTime.Now;
+            idZwrotu = index++;
+            this.przyczyna = przyczyna;
         }
 
-        public int id_zwrotu { get; private set; }
+        public int idZwrotu { get; private set; }
         public DateTime data {  get; private set; }
         public string przyczyna { get; private set; }
         public List<Przesylka> przesylki { get; private set; }
