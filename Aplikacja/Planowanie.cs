@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Postin.Zewnetrzne;
 
 namespace Postin.Aplikacja
 {
-    public class Plan_Dostawy : Postin.Zewnetrzne.IDataRekord
+    public class Plan_Dostawy : IDataRekord
     {
         static private int index = 1;
         private int id_planu;
@@ -25,7 +26,7 @@ namespace Postin.Aplikacja
         }
     }
 
-    public class Trasa : Postin.Zewnetrzne.IDataRekord
+    public class Trasa : IDataRekord
     {
         static private int id = 1;
         private int id_trasy;

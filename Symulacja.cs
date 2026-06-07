@@ -10,6 +10,24 @@ namespace Postin.Pomocnicze
 {
     public static class Symulacja
     {
+
+        public static string TAG = " ////////////// ";
+        public static void PrintInLine(params string[] info)
+        {
+            string _s = TAG;
+            foreach (string s in info)
+            {
+                _s += s;
+            }
+            Console.WriteLine(_s + TAG);
+        }
+
+        public static void MakeBreakLine()
+        {
+            Console.WriteLine("\n\n");
+        }
+
+
         /// <summary>
         /// Akcje NIE MOGĄ zawierać żadnych argumentów
         /// Akcje muszę zwracać BOOL!
