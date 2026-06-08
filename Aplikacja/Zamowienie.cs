@@ -56,8 +56,8 @@ namespace Postin.Aplikacja
             historia = new List<string>();
             status = "Oczekiwanie na";
             adres_dostawy = adres;
-            this.kodQR = $"PI-2026-{numer++.ToString().PadLeft(6, '0')}"; // Format z neta
-            Zewnetrzne.BazyDanych.AddToBase("PLATNOSCI", new Platnosc(symulowany_koszt_uslugi, kodQR));
+            this.idZamowienia = $"PI-2026-{numer++.ToString().PadLeft(6, '0')}"; // Format z neta
+            Zewnetrzne.BazyDanych.AddToBase("PLATNOSCI", new Platnosc(symulowany_koszt_uslugi, idZamowienia));
         }
 
 
@@ -69,7 +69,7 @@ namespace Postin.Aplikacja
         public List<string> historia { get; private set; }
         public string szacowanyCzasDostawy { get; set; }
         public string idKuriera { get; set; } 
-        public string kodQR { get; set; }
+        public string idZamowienia { get; set; }
         
         public void DodajDoZamowienia(Przesylka p)
         {

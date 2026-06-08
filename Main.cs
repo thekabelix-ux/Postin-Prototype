@@ -135,7 +135,7 @@ namespace Postin
 
             // Tworzymy całe zamówienie o konkretnym kodzie QR
             Zamowienie zamowienieSledzone = new Zamowienie("Szczecin, ul. Goplańska 17");
-            zamowienieSledzone.kodQR = "PI-2026-001042";
+            zamowienieSledzone.idZamowienia = "PI-2026-001042";
             zamowienieSledzone.status = "w dostawie";
             zamowienieSledzone.szacowanyCzasDostawy = "10.05.2026, godz. 9:00–13:00";
 

@@ -198,7 +198,7 @@ namespace Postin.Aplikacja
         public string SledzZamowienie(string trescKoduQR)
         {
             // Szukamy całego zamówienia po kodzie QR
-            var zamowienie = (Zamowienie)BazyDanych.FindInBase("Zamowienia", (a) => a is Zamowienie z && z.kodQR == trescKoduQR);
+            var zamowienie = (Zamowienie)BazyDanych.FindInBase("Zamowienia", (a) => a is Zamowienie z && z.idZamowienia == trescKoduQR);
 
             if (zamowienie == null)
             {
@@ -281,7 +281,7 @@ namespace Postin.Aplikacja
                         return JsonSerializer.Serialize(new OdpowiedzTestu { STATUS = "ERROR", ERROR_MESSAGE = "SELLER NOT REGISTERED" });
                     }
 
-                    float ourIncome = float.Parse(root.GetProperty("SERVICE_COST").GetRawText());
+                    float ourIncome = float.Parse(root.GetProperty("SERVIgCE_COST").GetRawText());
                     if(ourIncome == float.NaN || ourIncome < 0)
                     {
                         return JsonSerializer.Serialize(new OdpowiedzTestu { STATUS = "ERROR", ERROR_MESSAGE = "SERVICE NOT PAYED" });
@@ -292,7 +292,7 @@ namespace Postin.Aplikacja
                     // --- Jeśli walidacja przeszła pomyślnie, tworzymy zamówienie ---
                     var noweZamowienie = new Zamowienie(adres_zamieszkania);
 
-                    BazyDanych.AddToBase("PLATNOSCI", new Platnosc(ourIncome, noweZamowienie.kodQR));
+                    BazyDanych.AddToBase("PLATNOSCI", new Platnosc(ourIncome, noweZamowienie.idZamowienia));
 
                     JsonElement packages = root.GetProperty("Packages");
 
