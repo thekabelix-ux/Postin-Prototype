@@ -66,15 +66,15 @@ namespace Postin
             Administrator admin = new Administrator("admin", "1", "A", "A", "A");
 
             Zamowienie z1 = new Zamowienie("Szczecin, ul. Goplańska 17", 25);
-            Przesylka p1 = new Przesylka(5, new Wymiary(30, 20, 15), false, "Szczecin, ul. Goplańska 17");
+            Przesylka p1 = new Przesylka(5, new Wymiary(30, 20, 15), false);
             z1.DodajDoZamowienia(p1);
 
             Zamowienie z2 = new Zamowienie("Szczecin, ul. Nysy 21", 50);
-            Przesylka p2 = new Przesylka(2, new Wymiary(20, 20, 10), false, "Szczecin, ul. Nysy 21");
+            Przesylka p2 = new Przesylka(2, new Wymiary(20, 20, 10), false);
             z2.DodajDoZamowienia(p2);
 
             Zamowienie z3 = new Zamowienie("Szczecin, ul. Malborska 9", 12);
-            Przesylka p3 = new Przesylka(7, new Wymiary(40, 30, 20), false, "Szczecin, ul. Malborska 9");
+            Przesylka p3 = new Przesylka(7, new Wymiary(40, 30, 20), false);
             z3.DodajDoZamowienia(p3);
             
 
@@ -92,7 +92,7 @@ namespace Postin
                 Console.WriteLine($"Trasa {i + 1} zawiera paczki:");
                 foreach (var p in wygenerowaneTrasy[i])
                 {
-                    Console.WriteLine($" - Paczka do: {p.adres_dostawy} ({p.waga_laczna}kg)");
+                    Console.WriteLine($" - Paczka do: {p.adresDostawy} ({p.wagaLaczna}kg)");
                 }
             }
 
@@ -110,7 +110,7 @@ namespace Postin
             // Tworzymy paczkę testową (Ustawiamy jej ID na 1042 przez refleksję na polu index, żeby wymusić numer z testu) wsparłem się AI
             typeof(Przesylka).GetField("index", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)?.SetValue(null, 1042);
 
-            Przesylka paczkaTestowa = new Przesylka(5, new Wymiary(30, 20, 15), false, "Szczecin, ul. Goplańska 17", "w trasie");
+            Przesylka paczkaTestowa = p1;
             paczkaTestowa.idKuriera = "K01"; // Przypisujemy kurierowi K01
 
             // Wrzucamy do bazy
