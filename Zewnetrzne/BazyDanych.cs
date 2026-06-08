@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -41,6 +42,19 @@ namespace Postin.Zewnetrzne
                     if (found) return item;
                 }
                 return null;
+            }
+            else throw new Exception("No Base");
+        }
+
+        static public void PrintAllFromBase(string dataname)
+        {
+            var dataBase = GetDataBase(dataname);
+            if (dataBase != null)
+            {
+                foreach (var item in dataBase)
+                {
+                    Console.WriteLine(item.ToString());
+                }
             }
             else throw new Exception("No Base");
         }

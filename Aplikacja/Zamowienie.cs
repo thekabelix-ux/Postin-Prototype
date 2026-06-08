@@ -12,8 +12,34 @@ using System.Threading.Tasks;
 
 namespace Postin.Aplikacja
 {
+    public class Platnosc : IDataRekord
+    {
+        static private int nextIndex = 0;
+
+        public int index = 0;
+        public DateTime data;
+        public float zarobiona;
+        public string idZamowienia;
+
+        public Platnosc(float zarobione, string id)
+        {
+            index = nextIndex++;
+            data = DateTime.Now;
+            this.zarobiona = zarobione;
+            idZamowienia = id;
+        }
+
+        public override string ToString()
+        {
+            string message = index.ToString() + ". " + data.ToString("d") + " Zysk z zamowienia o id " + idZamowienia + " : " + zarobiona.ToString() + "zł";  
+            return message;
+        }
+    }
     public class Zamowienie : IDataRekord
     {
+        static private int numer = 0;
+
+
         public Zamowienie(string adres)
         {
             data_zlozenia = DateTime.Now;
@@ -23,7 +49,18 @@ namespace Postin.Aplikacja
             adres_dostawy = adres;
         }
 
-        public int numer { get; private set; }
+        public Zamowienie(string adres, float symulowany_koszt_uslugi)
+        {
+            data_zlozenia = DateTime.Now;
+            przesylki = new List<Przesylka>();
+            historia = new List<string>();
+            status = "Oczekiwanie na";
+            adres_dostawy = adres;
+            this.kodQR = $"PI-2026-{numer++.ToString().PadLeft(6, '0')}"; // Format z neta
+            Zewnetrzne.BazyDanych.AddToBase("PLATNOSCI", new Platnosc(symulowany_koszt_uslugi, kodQR));
+        }
+
+
         public float waga_laczna { get; set; }
         public DateTime data_zlozenia { get; private set; }
         public string adres_dostawy { get; private set; }
@@ -32,7 +69,13 @@ namespace Postin.Aplikacja
         public List<string> historia { get; private set; }
         public string szacowanyCzasDostawy { get; set; }
         public string idKuriera { get; set; } 
-        public string kodQR { get; set; }  
+        public string kodQR { get; set; }
+        
+        public void DodajDoZamowienia(Przesylka p)
+        {
+            waga_laczna += p.waga;
+            przesylki.Add(p);
+        }
 
         public void DodajKrokHistorii(string opisZdarzenia)
         {

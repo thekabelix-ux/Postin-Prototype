@@ -281,8 +281,19 @@ namespace Postin.Aplikacja
                         return JsonSerializer.Serialize(new OdpowiedzTestu { STATUS = "ERROR", ERROR_MESSAGE = "SELLER NOT REGISTERED" });
                     }
 
+                    float ourIncome = float.Parse(root.GetProperty("SERVICE_COST").GetRawText());
+                    if(ourIncome == float.NaN || ourIncome < 0)
+                    {
+                        return JsonSerializer.Serialize(new OdpowiedzTestu { STATUS = "ERROR", ERROR_MESSAGE = "SERVICE NOT PAYED" });
+                    }
+
+                    
+
                     // --- Jeśli walidacja przeszła pomyślnie, tworzymy zamówienie ---
                     var noweZamowienie = new Zamowienie(adres_zamieszkania);
+
+                    BazyDanych.AddToBase("PLATNOSCI", new Platnosc(ourIncome, noweZamowienie.kodQR));
+
                     JsonElement packages = root.GetProperty("Packages");
 
                     foreach (JsonProperty packageProp in packages.EnumerateObject())

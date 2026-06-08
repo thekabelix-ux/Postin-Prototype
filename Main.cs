@@ -44,35 +44,39 @@ namespace Postin
             // Klienta dodam po zmianach w logowaniu
 
             //////////////////////////////////////////////////////////////////////////////////////
-            ///// Rejestrujemy poprawnego sprzedawcę w bazie uzytkowników
+            ///// Rejestrujemy poprawnego sprzedawcę w bazie uzytkowników /////
             Postin.Zewnetrzne.BazyDanych.AddToBase("Uzytkownicy", new Sprzedawca("UX12", "123", "Jan", "Kowalski", "Szczecin", "NIP1"));
 
             // Obiekt sprzedawcy obsługujący żądanie
             Sprzedawca procesor = new Sprzedawca("System", "System", "S", "S", "S", "S");
 
-            string zz1 = "{\"Seller\": \"UX12\", \"Packages\": {\"1\":{\"SIZE\": {30,40,30}, \"WEIGHT\":40}}, \"TotalCost\": 100}"; Symulacja.MakeBreakLine();
-            string zz2 = "{\"Seller\": \"UX12\", \"Packages\": {\"1\":{\"SIZE\": {30,40,30}, \"WEIGHT\":40}}, \"TotalCost\": -400}"; Symulacja.MakeBreakLine(); 
-            string zz3 = "{\"Seller\": \"UX15\", \"Packages\": {\"1\":{\"SIZE\": {30,40,30}, \"WEIGHT\":40}}, \"TotalCost\": 100}"; Symulacja.MakeBreakLine();
+            string zz1 = "{\"Seller\": \"UX12\", \"Packages\": {\"1\":{\"SIZE\": {30,40,30}, \"WEIGHT\":40}}, \"TotalCost\": 100, \"SERVICE_COST\": 25}"; Symulacja.MakeBreakLine();
+            string zz2 = "{\"Seller\": \"UX12\", \"Packages\": {\"1\":{\"SIZE\": {30,40,30}, \"WEIGHT\":40}}, \"TotalCost\": -400, \"SERVICE_COST\": 25}"; Symulacja.MakeBreakLine(); 
+            string zz3 = "{\"Seller\": \"UX15\", \"Packages\": {\"1\":{\"SIZE\": {30,40,30}, \"WEIGHT\":40}}, \"TotalCost\": 100, \"SERVICE_COST\": 25}"; Symulacja.MakeBreakLine();
 
             Symulacja.PrintInLine("Zestaw 1: " , procesor.PrzetworzDanePaczek(zz1));
             Symulacja.PrintInLine("Zestaw 2: " , procesor.PrzetworzDanePaczek(zz2));
             Symulacja.PrintInLine("Zestaw 3: " , procesor.PrzetworzDanePaczek(zz3));
 
+            Symulacja.MakeBreakLine();
+
+            //////////////////////////////////////////////////////////////////////////////////////
 
             // Przygotowanie danych
             Administrator admin = new Administrator("admin", "1", "A", "A", "A");
 
-            Zamowienie z1 = new Zamowienie("Szczecin, ul. Goplańska 17");
+            Zamowienie z1 = new Zamowienie("Szczecin, ul. Goplańska 17", 25);
             Przesylka p1 = new Przesylka(5, new Wymiary(30, 20, 15), false, "Szczecin, ul. Goplańska 17");
-            z1.przesylki.Add(p1);
+            z1.DodajDoZamowienia(p1);
 
-            Zamowienie z2 = new Zamowienie("Szczecin, ul. Nysy 21");
+            Zamowienie z2 = new Zamowienie("Szczecin, ul. Nysy 21", 50);
             Przesylka p2 = new Przesylka(2, new Wymiary(20, 20, 10), false, "Szczecin, ul. Nysy 21");
-            z2.przesylki.Add(p2);
+            z2.DodajDoZamowienia(p2);
 
-            Zamowienie z3 = new Zamowienie("Szczecin, ul. Malborska 9");
+            Zamowienie z3 = new Zamowienie("Szczecin, ul. Malborska 9", 12);
             Przesylka p3 = new Przesylka(7, new Wymiary(40, 30, 20), false, "Szczecin, ul. Malborska 9");
-            z3.przesylki.Add(p3);
+            z3.DodajDoZamowienia(p3);
+            
 
             //  Wrzucamy ZAMÓWIENIA do bazy danych
             BazyDanych.AddToBase("Zamowienia", z1);
@@ -92,6 +96,9 @@ namespace Postin
                 }
             }
 
+            //////////////////////////////////////////////////////////////////////////////////////
+            Symulacja.MakeBreakLine();
+
             //  Próba zatwierdzenia przez Admina
             bool wynikZatwierdzenia = admin.ZatwierdzPlanDostawy(wygenerowaneTrasy);
             Console.WriteLine($"Status zatwierdzenia planu: {wynikZatwierdzenia}"); // True
@@ -109,7 +116,7 @@ namespace Postin
             // Wrzucamy do bazy
             BazyDanych.AddToBase("Przesylki", paczkaTestowa);
 
-            Console.WriteLine($"Wygenerowany kod QR paczki: {paczkaTestowa.kodQR}"); // Powinno być PI-2026-001042
+            Console.WriteLine($"Wygenerowany kod QR paczki: {paczkaTestowa.kodQR}");
             Console.WriteLine($"Status przed skanem: {paczkaTestowa.status}");
 
             // Kurier skanuje kod uzyskany z paczki
@@ -120,6 +127,8 @@ namespace Postin
             Console.WriteLine($"Czy skanowanie udane: {wynikSkanowania}"); // True
             Console.WriteLine($"Status po skanie: {paczkaTestowa.status}"); // dostarczona
 
+            //////////////////////////////////////////////////////////////////////////////////////
+            Symulacja.MakeBreakLine();
 
 
             Klient klient = new Klient("user1", "pass", "Mikołaj", "K", "Szczecin", "m@zut.pl");
@@ -149,6 +158,12 @@ namespace Postin
             Console.WriteLine("=== TEST KLIENTA: ZESTAW 2 ===");
             string wynikZestaw2 = klient.SledzZamowienie("PI-0000-000000");
             Console.WriteLine(wynikZestaw2);
+
+            Symulacja.MakeBreakLine();
+
+            Symulacja.PrintInLine("Symulacja platnosci: ");
+
+            Zewnetrzne.BazyDanych.PrintAllFromBase("PLATNOSCI");
         }
     }
 }
