@@ -125,16 +125,16 @@ namespace Postin.Aplikacja
 
             var grupy = wszystkieZamowienia.GroupBy(z =>
             {
-                if (string.IsNullOrEmpty(z.adres_dostawy)) return "BrakAdresu";
+                if (string.IsNullOrEmpty(z.adresDostawy)) return "BrakAdresu";
 
-                string adresLower = z.adres_dostawy.ToLower();
+                string adresLower = z.adresDostawy.ToLower();
 
                 if (adresLower.Contains("goplańska") || adresLower.Contains("nysy"))
                 {
                     return "Trasa_Goplanska_Nysy";
                 }
 
-                return $"Trasa_{z.adres_dostawy.Replace(" ", "_")}";
+                return $"Trasa_{z.adresDostawy.Replace(" ", "_")}";
             });
 
             foreach (var grupa in grupy)
@@ -206,7 +206,7 @@ namespace Postin.Aplikacja
             }
 
             string wynik = $"Status zamówienia: {zamowienie.status}\n";
-            wynik += $"Adres dostawy: {zamowienie.adres_dostawy}\n";
+            wynik += $"Adres dostawy: {zamowienie.adresDostawy}\n";
             wynik += $"Szacowany czas dostawy: {zamowienie.szacowanyCzasDostawy}\n";
             wynik += "Historia operacji:\n";
 
@@ -310,7 +310,7 @@ namespace Postin.Aplikacja
 
                         var wymiary = new Wymiary(a, b, c);
                         var paczka = new Przesylka(weight, wymiary, false);
-                        noweZamowienie.waga_laczna += weight;
+                        noweZamowienie.wagaLaczna += weight;
 
                         noweZamowienie.przesylki.Add(paczka);
                         BazyDanych.AddToBase("Przesylki", paczka);

@@ -42,28 +42,28 @@ namespace Postin.Aplikacja
 
         public Zamowienie(string adres)
         {
-            data_zlozenia = DateTime.Now;
+            dataZlozenia = DateTime.Now;
             przesylki = new List<Przesylka>();
             historia = new List<string>(); 
             status = "Oczekiwanie na";      
-            adres_dostawy = adres;
+            adresDostawy = adres;
         }
 
         public Zamowienie(string adres, float symulowany_koszt_uslugi)
         {
-            data_zlozenia = DateTime.Now;
+            dataZlozenia = DateTime.Now;
             przesylki = new List<Przesylka>();
             historia = new List<string>();
             status = "Oczekiwanie na";
-            adres_dostawy = adres;
+            adresDostawy = adres;
             this.idZamowienia = $"PI-2026-{numer++.ToString().PadLeft(6, '0')}"; // Format z neta
             Zewnetrzne.BazyDanych.AddToBase("PLATNOSCI", new Platnosc(symulowany_koszt_uslugi, idZamowienia));
         }
 
 
-        public float waga_laczna { get; set; }
-        public DateTime data_zlozenia { get; private set; }
-        public string adres_dostawy { get; private set; }
+        public float wagaLaczna { get; set; }
+        public DateTime dataZlozenia { get; private set; }
+        public string adresDostawy { get; private set; }
         public string status { get; set; }
         public List<Przesylka> przesylki { get; private set; }
         public List<string> historia { get; private set; }
@@ -73,8 +73,10 @@ namespace Postin.Aplikacja
         
         public void DodajDoZamowienia(Przesylka p)
         {
-            waga_laczna += p.waga;
+            wagaLaczna += p.waga;
             przesylki.Add(p);
+
+            p.zamowienie = this;
         }
 
         public void DodajKrokHistorii(string opisZdarzenia)
@@ -107,7 +109,8 @@ namespace Postin.Aplikacja
         public float dlugosc { get; private set; }
         public string status { get; set; }
         public bool czyDelikatna { get; private set; }
-        public string adres { get; private set; } 
+
+        public Zamowienie zamowienie { get; set; }
 
         // Zwraca objętość w metrach sześciennych (cm -> m)
         public float ObjetoscM3 => (szerokosc / 100f) * (wysokosc / 100f) * (dlugosc / 100f);
@@ -115,7 +118,9 @@ namespace Postin.Aplikacja
         public string kodQR { get; private set; }
         public string idKuriera { get; set; } // Kto aktualnie wiezie paczkę
 
-        public Przesylka(float waga, Wymiary wymiar, bool czyDelikatna, string adres = "", string status = "Oczekiwanie na")
+        public string Adres => zamowienie.adresDostawy;
+
+        public Przesylka(float waga, Wymiary wymiar, bool czyDelikatna, string status = "Oczekiwanie na")
         {
             idPrzesylki = index++;
             this.waga = waga;
@@ -124,7 +129,6 @@ namespace Postin.Aplikacja
             this.dlugosc = wymiar.dlugosc;
             this.czyDelikatna = czyDelikatna;
             this.status = status;
-            this.adres = adres;
 
 
             this.kodQR = $"PI-2026-{idPrzesylki.ToString().PadLeft(6, '0')}"; // Format z neta
