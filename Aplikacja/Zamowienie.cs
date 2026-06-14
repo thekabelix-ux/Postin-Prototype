@@ -83,6 +83,11 @@ namespace Postin.Aplikacja
         {
             historia.Add(opisZdarzenia);
         }
+
+        public void ChangeMode(string mode)
+        {
+            status = mode;
+        }
     }
 
     public class Wymiary

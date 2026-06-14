@@ -13,12 +13,14 @@ namespace Postin.Aplikacja
         private int id_planu;
         public DateTime data_dostawy { private set; get; }
 
+        public List<Trasa> trasy { get; private set; }
+
         public Plan_Dostawy()
         {
             id_planu = index++;
             data_dostawy = DateTime.Now;
+            trasy = new List<Trasa>();
         }
-
 
         public int GetIndex()
         {
@@ -30,14 +32,25 @@ namespace Postin.Aplikacja
     {
         static private int id = 1;
         private int id_trasy;
-        List<object> data;
+        private int id_kuriera; 
+
+        public List<Zamowienie> zamowienia { get; private set; } 
 
         public Trasa(int kurier)
         {
             id_trasy = id++;
-            this.id_kuriera = kurier;
+            this.id_kuriera = kurier; 
+            this.zamowienia = new List<Zamowienie>();
         }
 
-        private int id_kuriera;
+        public int GetIdTrasy()
+        {
+            return id_trasy;
+        }
+
+        public int GetIdKuriera()
+        {
+            return id_kuriera;
+        }
     }
 }

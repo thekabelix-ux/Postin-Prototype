@@ -82,8 +82,8 @@ namespace Postin.Aplikacja
         public bool SkanujKodQR(string trescKoduQR)
         {
             // Szukamy przesyłki w bazie, która ma ten kod QR, status "w trasie" i jest przypisana do tego kuriera
-            var przesylka = (Przesylka)BazyDanych.FindInBase("Przesylki", (a) =>
-                a is Przesylka p && p.kodQR == trescKoduQR && p.status == "w trasie" && p.idKuriera == this.idKuriera);
+            var przesylka = (Zamowienie)BazyDanych.FindInBase("Zamowienia", (a) =>
+                a is Zamowienie p && p.idZamowienia == trescKoduQR && p.status == "w trasie" && p.idKuriera == this.idKuriera);
 
             if (przesylka == null)
             {
@@ -101,9 +101,9 @@ namespace Postin.Aplikacja
             return true;
         }
 
-        private void PowiadomKlienta(Przesylka p)
+        private void PowiadomKlienta(Zamowienie p)
         {
-            Console.WriteLine($"[POWIADOMIENIE SMS/EMAIL] Kliencie! Twoja przesyłka o kodzie {p.kodQR} została odebrana!");
+            Console.WriteLine($"[POWIADOMIENIE SMS/EMAIL] Kliencie! Twoja przesyłka o kodzie {p.idZamowienia} została odebrana!");
         }
     }
 
@@ -224,7 +224,6 @@ namespace Postin.Aplikacja
 
             foreach (var id in idPrzesylek)
             {
-                // POPRAWKA: teraz int==int porównuje się prawidłowo
                 var przesylka = (Przesylka)BazyDanych.FindInBase("Przesylki", (a) => { return a is Przesylka p && p.idPrzesylki == id; });
                 if (przesylka != null) zwrot.przesylki.Add(przesylka);
             }
@@ -232,13 +231,42 @@ namespace Postin.Aplikacja
             BazyDanych.AddToBase("Zwroty", zwrot);
         }
 
-        void ZglosUwagi()
+        public void ZglosUwagi(string trescOpisu)
         {
+            var nowaOpinia = new Opinia();
+
+            nowaOpinia.GetType().GetProperty("opis")?.SetValue(nowaOpinia, trescOpisu);
+
+            BazyDanych.AddToBase("Opinie", nowaOpinia);
+            Console.WriteLine($"[System] Uwagi klienta zostały pomyślnie zapisane w bazie danych pod ID: {nowaOpinia.id_opinii}.");
         }
 
-        void PobierzPotwierdzenie()
+        public string PobierzPotwierdzenie(string trescKoduQR)
         {
+            var zamowienie = (Zamowienie)BazyDanych.FindInBase("Zamowienia", (a) => a is Zamowienie z && z.idZamowienia == trescKoduQR);
 
+            if (zamowienie == null)
+            {
+                return "BŁĄD: Nie znaleziono takiego zamówienia w systemie.";
+            }
+
+            if (zamowienie.status != "dostarczona")
+            {
+                return $"BŁĄD: Nie można pobrać potwierdzenia. Aktualny status zamówienia to: {zamowienie.status} (Wymagane: dostarczona).";
+            }
+
+            string potwierdzenie = "========================================\n";
+            potwierdzenie += "       POTWIERDZENIE ODBIORU POSTIN      \n";
+            potwierdzenie += "========================================\n";
+            potwierdzenie += $"Kod zamówienia: {zamowienie.idZamowienia}\n";
+            potwierdzenie += $"Data złożenia:  {zamowienie.dataZlozenia}\n";
+            potwierdzenie += $"Adres dostawy:  {zamowienie.adresDostawy}\n";
+            potwierdzenie += $"Status:         Dostarczone pomyślnie\n";
+            potwierdzenie += "----------------------------------------\n";
+            potwierdzenie += $"Liczba paczek w zamówieniu: {zamowienie.przesylki.Count}\n";
+            potwierdzenie += "========================================\n";
+
+            return potwierdzenie;
         }
     }
 

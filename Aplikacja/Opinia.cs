@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Postin.Aplikacja
 {
 
-    public class Opinia
+    public class Opinia : Zewnetrzne.IDataRekord
     {
         public Opinia()
         {

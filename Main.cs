@@ -107,16 +107,16 @@ namespace Postin
             // Tworzymy kuriera K01
             Kurier kurier = new Kurier("kurier1", "123", "Piotr", "Dostawca", "Szczecin", "K01");
 
-            // Tworzymy paczkę testową (Ustawiamy jej ID na 1042 przez refleksję na polu index, żeby wymusić numer z testu) wsparłem się AI
-            typeof(Przesylka).GetField("index", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)?.SetValue(null, 1042);
+            typeof(Zamowienie).GetField("numer", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)?.SetValue(null, 1042);
 
-            Przesylka paczkaTestowa = p1;
+            Zamowienie paczkaTestowa = new Zamowienie("Ulica. Kopernikowa", 60);
             paczkaTestowa.idKuriera = "K01"; // Przypisujemy kurierowi K01
 
             // Wrzucamy do bazy
-            BazyDanych.AddToBase("Przesylki", paczkaTestowa);
+            BazyDanych.AddToBase("Zamowienia", paczkaTestowa);
+            paczkaTestowa.ChangeMode("w trasie");
 
-            Console.WriteLine($"Wygenerowany kod QR paczki: {paczkaTestowa.kodQR}");
+            Console.WriteLine($"Wygenerowany kod QR paczki: {paczkaTestowa.idZamowienia}");
             Console.WriteLine($"Status przed skanem: {paczkaTestowa.status}");
 
             // Kurier skanuje kod uzyskany z paczki
