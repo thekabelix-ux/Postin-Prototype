@@ -1,8 +1,13 @@
-﻿using System;
+﻿using Postin;
+using Postin.Aplikacja.Postin.Aplikacja;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Postin.Zewnetrzne;
 
 namespace Postin.Aplikacja
 {
@@ -15,7 +20,7 @@ namespace Postin.Aplikacja
         }
     }
 
-    abstract public class Uzytkownik
+    abstract public class Uzytkownik : IDataRekord
     {
         // Dane bazowe
         public int ID { protected set; get; }
@@ -30,14 +35,18 @@ namespace Postin.Aplikacja
         protected bool sesja_aktywna;
         //
 
+        
+
+
         // Metody
-        public bool zaloguj(string login, string haslo)
+        static public bool Zaloguj(string login, string haslo)
         {
-            if (sesja_aktywna) throw new Exception("Jesteś już zalogowany");
-            if (this.login != login) throw new ArgumentException("Błędny login");
-            else if (this.haslo != haslo) throw new ArgumentException("Błędne hasło");
-            sesja_aktywna = true;
-            return sesja_aktywna;
+            Uzytkownik user_data = (Uzytkownik)(BazyDanych.FindInBase("Uzytkownicy", (a) => { return a is Uzytkownik u && u.login == login; }));
+            if (user_data == null) throw new ArgumentException("Nie ma takiego użytkownika");
+            if (user_data.sesja_aktywna) throw new Exception("Jesteś już zalogowany");
+            else if (user_data.haslo != haslo) throw new ArgumentException("Błędne hasło");
+            user_data.sesja_aktywna = true;
+            return user_data.sesja_aktywna;
         }
 
 
@@ -61,25 +70,116 @@ namespace Postin.Aplikacja
 
     public class Kurier : Uzytkownik
     {
-        public string nr_rejestracyjny { protected set; get; }
+        public string idKuriera { get; private set; }
 
-
-
-        // Konstruktor
-        public Kurier(string login, string haslo, string imie, string nazwisko, string _adres_zamieszkania, string nr_rejestracyjny) : base(login, haslo, imie, nazwisko, _adres_zamieszkania)
+        public Kurier(string login, string haslo, string imie, string nazwisko, string _adres_zamieszkania, string idKuriera)
+            : base(login, haslo, imie, nazwisko, _adres_zamieszkania)
         {
-            this.nr_rejestracyjny = nr_rejestracyjny;
+            this.idKuriera = idKuriera;
+        }
+
+        // "Skanowanie" kodu QR przez kuriera
+        public bool SkanujKodQR(string trescKoduQR)
+        {
+            // Szukamy przesyłki w bazie, która ma ten kod QR, status "w trasie" i jest przypisana do tego kuriera
+            var przesylka = (Zamowienie)BazyDanych.FindInBase("Zamowienia", (a) =>
+                a is Zamowienie p && p.idZamowienia == trescKoduQR && p.status == "w trasie" && p.idKuriera == this.idKuriera);
+
+            if (przesylka == null)
+            {
+                Console.WriteLine("BŁĄD: Nie znaleziono paczki o tym kodzie na liście kuriera lub złe statusy.");
+                return false;
+            }
+
+            // Warunek zaliczenia: Zmiana statusu na "dostarczona"
+            // Używamy refleksji z powodu private set, lub zmień na public set / internal set w Przesylka
+            przesylka.status = "dostarczona";
+
+            // Warunek zaliczenia: Klient otrzymuje powiadomienie
+            PowiadomKlienta(przesylka);
+
+            return true;
+        }
+
+        private void PowiadomKlienta(Zamowienie p)
+        {
+            Console.WriteLine($"[POWIADOMIENIE SMS/EMAIL] Kliencie! Twoja przesyłka o kodzie {p.idZamowienia} została odebrana!");
         }
     }
 
 
     public class Administrator : Uzytkownik
     {
+        private const float MAX_WAGA_KG = 3500f;
+        private const float MAX_OBJETOSC_M3 = 3f;
+
+        public Administrator(string login, string haslo, string imie, string nazwisko, string _adres_zamieszkania)
+            : base(login, haslo, imie, nazwisko, _adres_zamieszkania) { }
+
+        // Grupowanie Zamówień na podstawie ich wspólnego adresu dostawy
+        public List<List<Zamowienie>> GrupujZamowieniaAutomatycznie()
+        {
+            var wszystkieZamowienia = BazyDanych.GetDataBase("Zamowienia").Cast<Zamowienie>().ToList();
+            var trasy = new List<List<Zamowienie>>();
 
 
+            var grupy = wszystkieZamowienia.GroupBy(z =>
+            {
+                if (string.IsNullOrEmpty(z.adresDostawy)) return "BrakAdresu";
 
-        // Konstruktor
-        public Administrator(string login, string haslo, string imie, string nazwisko, string _adres_zamieszkania) : base(login, haslo, imie, nazwisko, _adres_zamieszkania) {}
+                string adresLower = z.adresDostawy.ToLower();
+
+                if (adresLower.Contains("goplańska") || adresLower.Contains("nysy"))
+                {
+                    return "Trasa_Goplanska_Nysy";
+                }
+
+                return $"Trasa_{z.adresDostawy.Replace(" ", "_")}";
+            });
+
+            foreach (var grupa in grupy)
+            {
+                trasy.Add(grupa.ToList());
+            }
+
+            return trasy;
+        }
+
+        // Walidacja tras na podstawie sumy wszystkich przesyłek w zamówieniach
+        public bool ZatwierdzPlanDostawy(List<List<Zamowienie>> proponowaneTrasy)
+        {
+            foreach (var trasa in proponowaneTrasy)
+            {
+                float totalTrasaWaga = 0;
+                float totalTrasaObjetosc = 0;
+
+                foreach (var zamowienie in trasa)
+                {
+                    // Zliczamy wagę i objętość wszystkich przesyłek w tym zamówieniu
+                    foreach (var paczka in zamowienie.przesylki)
+                    {
+                        totalTrasaWaga += paczka.waga;
+                        totalTrasaObjetosc += paczka.ObjetoscM3;
+                    }
+                }
+
+                // Ponowne sprawdzenie warunków granicznych pojazdu
+                if (totalTrasaWaga > MAX_WAGA_KG || totalTrasaObjetosc > MAX_OBJETOSC_M3)
+                {
+                    Console.WriteLine($"BŁĄD: Trasa przekracza limity! Waga: {totalTrasaWaga}kg, Objętość: {totalTrasaObjetosc}m3");
+                    return false;
+                }
+            }
+
+            // Zapis zatwierdzonych planów do bazy
+            foreach (var trasa in proponowaneTrasy)
+            {
+                var plan = new Plan_Dostawy();
+                BazyDanych.AddToBase("PlanyDostaw", plan);
+            }
+
+            return true;
+        }
     }
 
 
@@ -93,6 +193,81 @@ namespace Postin.Aplikacja
             this.nr_telefonu = nr_tel;
             this.email = email;
         }
+
+
+        public string SledzZamowienie(string trescKoduQR)
+        {
+            // Szukamy całego zamówienia po kodzie QR
+            var zamowienie = (Zamowienie)BazyDanych.FindInBase("Zamowienia", (a) => a is Zamowienie z && z.idZamowienia == trescKoduQR);
+
+            if (zamowienie == null)
+            {
+                return "BŁĄD: Nie znaleziono przesyłki o podanym numerze.";
+            }
+
+            string wynik = $"Status zamówienia: {zamowienie.status}\n";
+            wynik += $"Adres dostawy: {zamowienie.adresDostawy}\n";
+            wynik += $"Szacowany czas dostawy: {zamowienie.szacowanyCzasDostawy}\n";
+            wynik += "Historia operacji:\n";
+
+            foreach (var krok in zamowienie.historia)
+            {
+                wynik += $" - [UKOŃCZONO] {krok}\n";
+            }
+
+            return wynik;
+        }
+
+        public void ZglosZwrot(string przyczyna, params int[] idPrzesylek)
+        {
+            var zwrot = new Zwrot(przyczyna);
+
+            foreach (var id in idPrzesylek)
+            {
+                var przesylka = (Przesylka)BazyDanych.FindInBase("Przesylki", (a) => { return a is Przesylka p && p.idPrzesylki == id; });
+                if (przesylka != null) zwrot.przesylki.Add(przesylka);
+            }
+
+            BazyDanych.AddToBase("Zwroty", zwrot);
+        }
+
+        public void ZglosUwagi(string trescOpisu)
+        {
+            var nowaOpinia = new Opinia();
+
+            nowaOpinia.GetType().GetProperty("opis")?.SetValue(nowaOpinia, trescOpisu);
+
+            BazyDanych.AddToBase("Opinie", nowaOpinia);
+            Console.WriteLine($"[System] Uwagi klienta zostały pomyślnie zapisane w bazie danych pod ID: {nowaOpinia.id_opinii}.");
+        }
+
+        public string PobierzPotwierdzenie(string trescKoduQR)
+        {
+            var zamowienie = (Zamowienie)BazyDanych.FindInBase("Zamowienia", (a) => a is Zamowienie z && z.idZamowienia == trescKoduQR);
+
+            if (zamowienie == null)
+            {
+                return "BŁĄD: Nie znaleziono takiego zamówienia w systemie.";
+            }
+
+            if (zamowienie.status != "dostarczona")
+            {
+                return $"BŁĄD: Nie można pobrać potwierdzenia. Aktualny status zamówienia to: {zamowienie.status} (Wymagane: dostarczona).";
+            }
+
+            string potwierdzenie = "========================================\n";
+            potwierdzenie += "       POTWIERDZENIE ODBIORU POSTIN      \n";
+            potwierdzenie += "========================================\n";
+            potwierdzenie += $"Kod zamówienia: {zamowienie.idZamowienia}\n";
+            potwierdzenie += $"Data złożenia:  {zamowienie.dataZlozenia}\n";
+            potwierdzenie += $"Adres dostawy:  {zamowienie.adresDostawy}\n";
+            potwierdzenie += $"Status:         Dostarczone pomyślnie\n";
+            potwierdzenie += "----------------------------------------\n";
+            potwierdzenie += $"Liczba paczek w zamówieniu: {zamowienie.przesylki.Count}\n";
+            potwierdzenie += "========================================\n";
+
+            return potwierdzenie;
+        }
     }
 
 
@@ -100,11 +275,90 @@ namespace Postin.Aplikacja
     {
         public string nip { protected set; get; }
 
-        // Konstruktor
-        public Sprzedawca(string login, string haslo, string imie, string nazwisko, string _adres_zamieszkania, string nip) : base(login, haslo, imie, nazwisko, _adres_zamieszkania) {
+        public Sprzedawca(string login, string haslo, string imie, string nazwisko, string _adres_zamieszkania, string nip)
+            : base(login, haslo, imie, nazwisko, _adres_zamieszkania)
+        {
             this.nip = nip;
         }
 
+        // Przetwarzanie testowego JSONa
+        public string PrzetworzDanePaczek(string jsonInput)
+        {
+            try
+            {
+                jsonInput = jsonInput.Replace("\"{", "[").Replace("}\"", "]").Replace("{30,40,30}", "[30,40,30]");
+
+                using (JsonDocument doc = JsonDocument.Parse(jsonInput))
+                {
+                    JsonElement root = doc.RootElement;
+
+                    // Pobranie kosztu i szybka walidacja 
+                    float totalCost = float.Parse(root.GetProperty("TotalCost").GetRawText());
+                    if (totalCost < 0)
+                    {
+                        return JsonSerializer.Serialize(new OdpowiedzTestu { STATUS = "ERROR", ERROR_MESSAGE = "NEGATIVE COST NUMBER" });
+                    }
+
+                    // Pobranie sprzedawcy i walidacja w bazie
+                    string sellerLogin = root.GetProperty("Seller").GetString();
+                    var istniejeSprzedawca = BazyDanych.FindInBase("Uzytkownicy",
+                        (a) => a is Sprzedawca s && s.login == sellerLogin);
+
+                    if (istniejeSprzedawca == null)
+                    {
+                        return JsonSerializer.Serialize(new OdpowiedzTestu { STATUS = "ERROR", ERROR_MESSAGE = "SELLER NOT REGISTERED" });
+                    }
+
+                    float ourIncome = float.Parse(root.GetProperty("SERVIgCE_COST").GetRawText());
+                    if(ourIncome == float.NaN || ourIncome < 0)
+                    {
+                        return JsonSerializer.Serialize(new OdpowiedzTestu { STATUS = "ERROR", ERROR_MESSAGE = "SERVICE NOT PAYED" });
+                    }
+
+                    
+
+                    // --- Jeśli walidacja przeszła pomyślnie, tworzymy zamówienie ---
+                    var noweZamowienie = new Zamowienie(adres_zamieszkania);
+
+                    BazyDanych.AddToBase("PLATNOSCI", new Platnosc(ourIncome, noweZamowienie.idZamowienia));
+
+                    JsonElement packages = root.GetProperty("Packages");
+
+                    foreach (JsonProperty packageProp in packages.EnumerateObject())
+                    {
+                        JsonElement pkgData = packageProp.Value;
+                        float weight = float.Parse(pkgData.GetProperty("WEIGHT").GetRawText());
+
+
+
+                        var sizeArray = pkgData.GetProperty("SIZE").EnumerateArray();
+                        float a = float.Parse(sizeArray.Current.GetRawText()); sizeArray.MoveNext();
+                        float b = float.Parse(sizeArray.Current.GetRawText()); sizeArray.MoveNext();
+                        float c = float.Parse(sizeArray.Current.GetRawText());
+
+                        var wymiary = new Wymiary(a, b, c);
+                        var paczka = new Przesylka(weight, wymiary, false);
+                        noweZamowienie.wagaLaczna += weight;
+
+                        noweZamowienie.przesylki.Add(paczka);
+                        BazyDanych.AddToBase("Przesylki", paczka);
+                    }
+
+                    BazyDanych.AddToBase("Zamowienia", noweZamowienie);
+                    return JsonSerializer.Serialize(new OdpowiedzTestu { STATUS = "SUCCESS" });
+                }
+            }
+            catch (Exception)
+            {
+                return JsonSerializer.Serialize(new OdpowiedzTestu { STATUS = "ERROR", ERROR_MESSAGE = "INVALID JSON FORMAT" });
+            }
+        }
+
+        // Stara metoda - zostaje pusta
+        public void PrzekazZamowienie(IDataRekord dane_paczki)
+        {
+            var base_ = BazyDanych.GetDataBase("Przesylki");
+        }
     }
 
 
