@@ -151,11 +151,11 @@ namespace Postin
             // Wrzucamy ZAMÓWIENIE do bazy danych
             BazyDanych.AddToBase("Zamowienia", zamowienieSledzone);
 
-            Console.WriteLine("=== TEST KLIENTA: ZESTAW 1 ===");
+            Symulacja.PrintInLine("TEST KLIENTA: ZESTAW 1");
             string wynikZestaw1 = klient.SledzZamowienie("PI-2026-001042");
             Console.WriteLine(wynikZestaw1);
 
-            Console.WriteLine("=== TEST KLIENTA: ZESTAW 2 ===");
+            Symulacja.PrintInLine("TEST KLIENTA: ZESTAW 2");
             string wynikZestaw2 = klient.SledzZamowienie("PI-0000-000000");
             Console.WriteLine(wynikZestaw2);
 
